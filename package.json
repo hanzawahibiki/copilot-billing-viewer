@@ -6,10 +6,11 @@
   "homepage": "https://hanzawahibiki.github.io/copilot-billing-viewer",
   "scripts": {
     "dev": "vite",
-    "start": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
