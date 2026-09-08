@@ -1,0 +1,7 @@
+date,username,product,sku,model,quantity,unit_type,applied_cost_per_quantity,gross_amount,discount_amount,net_amount,total_monthly_quota,organization,repository,cost_center_name,aic_quantity,aic_gross_amount,input,output,cache_read,cache_write
+2026/8/7,user001,copilot,copilot_ai_credit,Claude Sonnet 5,597.55188,ai-credits,0.01,5.9755188,5.9755188,0,1900,aaaaaa,,,0,0,15325,84650,16113319,750282
+2026/8/7,yamada-taro,copilot,copilot_ai_credit,Claude Sonnet 4.6,420.12000,ai-credits,0.01,4.2012000,4.2012000,0,1900,aaaaaa,frontend-app,Frontend Team,0,0,12400,65200,11200400,520100
+2026/8/7,tanaka-kenji,copilot,copilot_ai_credit,GPT-5.4,680.50000,ai-credits,0.01,6.8050000,5.0000000,1.8050000,1900,aaaaaa,backend-service,Platform Team,0,0,28500,98400,8900000,410000
+2026/8/8,user001,copilot,copilot_ai_credit,Claude 3.7 Sonnet,450.80000,ai-credits,0.01,4.5080000,4.5080000,0,1900,aaaaaa,core-engine,Core Team,0,0,18200,72100,14300000,620000
+2026/8/8,suzuki-mai,copilot,copilot_ai_credit,Gemini 3.8 Flash,180.25000,ai-credits,0.01,1.8025000,1.8025000,0,1900,aaaaaa,ml-pipeline,AI Research,0,0,14500,45000,9800000,320000
+2026/8/8,sato-yuki,copilot,copilot_ai_credit,o3-mini,150.25000,ai-credits,0.01,1.5025000,1.5025000,0,1900,aaaaaa,ml-pipeline,AI Research,0,0,8400,32000,4500000,210000
