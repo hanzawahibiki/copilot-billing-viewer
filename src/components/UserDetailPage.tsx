@@ -208,15 +208,33 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
   const thClass = isDark ? 'text-slate-400 border-slate-800' : 'text-slate-500 border-slate-200'
   const tdClass = isDark ? 'text-slate-300 border-slate-800/60' : 'text-slate-700 border-slate-100'
 
+  // ピン留め状態のツールチップ管理
+  const [pinnedTooltip, setPinnedTooltip] = useState<{ label: string } | null>(null)
+
   // 日別・モデル別ツールチップ
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const DailyModelTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || payload.length === 0) return null
-    const row = dailyByModel.find((d) => d.date === label)
+    // ピン留め中は該当日のデータを固定表示
+    const displayLabel = pinnedTooltip ? pinnedTooltip.label : label
+    const isVisible = pinnedTooltip ? true : (active && payload && payload.length > 0)
+    if (!isVisible) return null
+
+    const row = dailyByModel.find((d) => d.date === displayLabel)
     if (!row) return null
 
+    // ピン留め時は row から payload を再構築
+    const displayPayload = pinnedTooltip
+      ? allModels
+          .filter((m) => row.details[m])
+          .map((m) => ({
+            name: m,
+            value: row[m] ?? 0,
+            color: modelColorMap[m],
+          }))
+      : payload
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const total = payload.reduce((s: number, p: any) => s + (Number(p.value) || 0), 0)
+    const total = displayPayload.reduce((s: number, p: any) => s + (Number(p.value) || 0), 0)
 
     return (
       <div
@@ -229,11 +247,13 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
           padding: '10px 14px',
           fontSize: '12px',
           minWidth: '240px',
+          pointerEvents: 'auto' as const,
         }}
         className="shadow-xl space-y-2"
+        onWheel={(e) => e.stopPropagation()}
       >
         <div className="font-bold border-b border-slate-700/50 pb-1.5 flex justify-between items-center">
-          <span>{label}</span>
+          <span>{displayLabel}</span>
           <span className="text-indigo-400 font-extrabold">
             {chartMetric === 'cost'
               ? formatCurrency(total)
@@ -244,7 +264,7 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
         </div>
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {[...payload].reverse().map((p: any) => {
+          {[...displayPayload].reverse().map((p: any) => {
             const modelName = String(p.name ?? '')
             const dtl = row.details[modelName]
             if (!dtl) return null
@@ -267,6 +287,19 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
             )
           })}
         </div>
+        {pinnedTooltip && (
+          <div
+            className="text-[10px] text-center pt-1 border-t border-slate-700/30 text-slate-500 cursor-pointer hover:text-slate-300"
+            onClick={() => setPinnedTooltip(null)}
+          >
+            クリックで閉じる
+          </div>
+        )}
+        {!pinnedTooltip && (
+          <div className="text-[10px] text-center pt-1 border-t border-slate-700/30 text-slate-500">
+            クリックで固定
+          </div>
+        )}
       </div>
     )
   }
@@ -365,7 +398,7 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
             {/* 指標切り替えスイッチ (コスト / クレジット / トークン) */}
             <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-xs ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-100 border-slate-200'}`}>
               <button
-                onClick={() => setChartMetric('cost')}
+                onClick={() => { setChartMetric('cost'); setPinnedTooltip(null) }}
                 className={`px-2.5 py-1 rounded cursor-pointer transition-colors ${
                   chartMetric === 'cost'
                     ? 'bg-indigo-600 text-white font-medium shadow-sm'
@@ -375,7 +408,7 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
                 コスト ($)
               </button>
               <button
-                onClick={() => setChartMetric('credits')}
+                onClick={() => { setChartMetric('credits'); setPinnedTooltip(null) }}
                 className={`px-2.5 py-1 rounded cursor-pointer transition-colors ${
                   chartMetric === 'credits'
                     ? 'bg-indigo-600 text-white font-medium shadow-sm'
@@ -385,7 +418,7 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
                 クレジット
               </button>
               <button
-                onClick={() => setChartMetric('tokens')}
+                onClick={() => { setChartMetric('tokens'); setPinnedTooltip(null) }}
                 className={`px-2.5 py-1 rounded cursor-pointer transition-colors ${
                   chartMetric === 'tokens'
                     ? 'bg-indigo-600 text-white font-medium shadow-sm'
@@ -399,7 +432,17 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyByModel} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+              <BarChart
+                data={dailyByModel}
+                margin={{ top: 5, right: 10, left: -10, bottom: 0 }}
+                onClick={(state) => {
+                  if (state && state.activeLabel) {
+                    setPinnedTooltip((prev) =>
+                      prev?.label === state.activeLabel ? null : { label: String(state.activeLabel) }
+                    )
+                  }
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
                 <XAxis
                   dataKey="date"
@@ -418,7 +461,12 @@ export function UserDetailPage({ username, records, onBack }: UserDetailPageProp
                       : formatTokens(v)
                   }
                 />
-                <Tooltip content={<DailyModelTooltip />} />
+                <Tooltip
+                  content={<DailyModelTooltip />}
+                  wrapperStyle={{ zIndex: 1000, pointerEvents: 'auto' }}
+                  allowEscapeViewBox={{ x: true, y: true }}
+                  isAnimationActive={false}
+                />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} iconType="circle" />
                 {allModels.map((m) => (
                   <Bar
